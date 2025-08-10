@@ -1,0 +1,67 @@
+name: CI Maven Project
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_dev:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: microsoft
+      - name: Build using Maven (Dev)
+        run: mvn --batch-mode --update-snapshots verify
+      - run: mkdir staging && cp target/*.jar staging
+      - name: Upload Build Artifact (Dev)
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-dev
+          path: staging
+
+  build_staging:
+    runs-on: ubuntu-latest
+    needs: build_dev
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: microsoft
+      - name: Build using Maven (Staging)
+        run: mvn --batch-mode --update-snapshots verify
+      - run: mkdir staging && cp target/*.jar staging
+      - name: Upload Build Artifact (Staging)
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-staging
+          path: staging
+
+  build_prod:
+    runs-on: ubuntu-latest
+    needs: build_staging
+    environment: prod
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: microsoft
+      - name: Build using Maven (Prod)
+        run: mvn --batch-mode --update-snapshots verify
+      - run: mkdir staging && cp target/*.jar staging
+      - name: Upload Build Artifact (Prod)
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-prod
+          path: staging
